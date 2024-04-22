@@ -5,3 +5,5 @@ pandas
 thop
 tqdm
 fiftyone
+opencv-python
+matplotlib
