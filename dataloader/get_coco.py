@@ -4,7 +4,7 @@ import fiftyone as fo
 import fiftyone.zoo as foz
 import torch
 from PIL import Image
-from transform import Transformtsz
+from .transform import Transformtsz, FiftyOneTorchDataset
 
 """ Full split stats
 
@@ -24,10 +24,11 @@ fo.config.dataset_zoo_dir = data_dir
 def load_coco(max_samples):
     dataset = foz.load_zoo_dataset(
     "coco-2017",
-    splits = ["train", "test", "validation"],
+    splits = ["train", "validation", "test"],
     label_types = ["detections"],
     # classes = classes
-    max_samples = max_samples,)
+    max_samples = max_samples,
+    dataset_dir="../data")
     
     dataset.compute_metadata()
     return dataset
@@ -46,10 +47,9 @@ for class_id, class_name in enumerate(classes):
 
 def ttsplit(dataset):
     train_data = dataset.match_tags("train")
-    train2_data = dataset.match_tags("test")
-    test_data = dataset.match_tags("validation")
-    train_data = train2_data + train_data
-    return train_data, test_data
+    test_data = dataset.match_tags("test")
+    val_data = dataset.match_tags("validation")
+    return train_data, test_data, val_data
 
 def get_torch(dataset):
     classes = dataset.distinct(
@@ -61,3 +61,6 @@ def get_torch(dataset):
 def get_loader(torch_dataset):
     data_loader = torch.utils.data.DataLoader(torch_dataset, batch_size=1, shuffle=False)
     return data_loader
+
+if __name__ == "__main__":
+    load_coco(5000)
