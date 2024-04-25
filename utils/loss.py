@@ -1,7 +1,7 @@
 import torch
 
 
-def yolo_loss(yhat, y):
+def yolo_loss(yhat, y, lambda_coord=5, lambda_noobj=0.5):
 	"""
 	Args:
 		yhat: [#, 7, 7, 30]
