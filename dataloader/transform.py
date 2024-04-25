@@ -53,17 +53,18 @@ class FiftyOneTorchDataset(torch.utils.data.Dataset):
         labels = []
         area = []
         iscrowd = []
-        detections = sample[self.gt_field].detections
-        for det in detections:
-            category_id = self.labels_map_rev[det.label]
-            coco_obj = fouc.COCOObject.from_label(
-                det, metadata, category_id=category_id,
-            )
-            x, y, w, h = coco_obj.bbox
-            boxes.append([(x + w / 2) / width, (y + h / 2) / height, w / width, h / height]) # normalized (xc, yc, w, h)
-            labels.append(coco_obj.category_id)
-            area.append(coco_obj.area)
-            iscrowd.append(coco_obj.iscrowd)
+        if sample[self.gt_field] is not None:
+            detections = sample[self.gt_field].detections
+            for det in detections:
+                category_id = self.labels_map_rev[det.label]
+                coco_obj = fouc.COCOObject.from_label(
+                    det, metadata, category_id=category_id,
+                )
+                x, y, w, h = coco_obj.bbox
+                boxes.append([(x + w / 2) / width, (y + h / 2) / height, w / width, h / height]) # normalized (xc, yc, w, h)
+                labels.append(coco_obj.category_id)
+                area.append(coco_obj.area)
+                iscrowd.append(coco_obj.iscrowd)
 
         target = {}
         target["boxes"] = torch.as_tensor(boxes, dtype=torch.float32)
@@ -95,7 +96,7 @@ def collate(batch, grid_size=7, n_classes=80):
     images = []
     gt = []
     for item in batch:
-        images.append(item[0])
+        images.append(item[0].unsqueeze(0))
 
         fmap = torch.zeros(1, grid_size, grid_size, 5*2+n_classes)
         bboxes = item[1]["boxes"]
@@ -128,7 +129,7 @@ def collate(batch, grid_size=7, n_classes=80):
                 fmap[0, row, col, 7:9]  = bbox[2:] # bbox w and h relative to image size
                 fmap[0, row, col, 9] = 1 # confindece
             # set classes probabilities
-            fmap[0, row, col, label + 10] = 1
+            fmap[0, row, col, label - 1 + 10] = 1
         gt.append(fmap)
     
     images = torch.cat(images, 0)

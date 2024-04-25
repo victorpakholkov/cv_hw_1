@@ -1,0 +1,12 @@
+epoch: 0, batch: 125 / 625, loss: 35.9224, time: 19.8957
+epoch: 0, batch: 250 / 625, loss: 29.4335, time: 42.5116
+epoch: 0, batch: 375 / 625, loss: 26.5274, time: 65.1395
+epoch: 0, batch: 500 / 625, loss: 24.9886, time: 87.7653
+epoch: 0, batch: 625 / 625, loss: 23.8350, time: 110.4138
+epoch: 1, test loss: 0.6959, time: 78.0457
+epoch: 1, batch: 125 / 625, loss: 18.7043, time: 22.6348
+epoch: 1, batch: 250 / 625, loss: 18.3035, time: 44.6894
+epoch: 1, batch: 375 / 625, loss: 18.1418, time: 65.9538
+epoch: 1, batch: 500 / 625, loss: 18.2124, time: 77.1579
+epoch: 1, batch: 625 / 625, loss: 18.1455, time: 88.4277
+epoch: 2, test loss: 0.8669, time: 54.9771

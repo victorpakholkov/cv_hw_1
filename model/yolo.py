@@ -4,7 +4,7 @@ from backbone import YoloBackbone
 
 
 class Yolo(nn.Module):
-	def __init__(self, backbone: YoloBackbone, backbone_out_channels=1024, n_classes=80):
+	def __init__(self, backbone: YoloBackbone = YoloBackbone(), backbone_out_channels=1024, n_classes=80):
 		self.n_classes = n_classes
 		super(Yolo, self).__init__()
 		self.backbone = backbone
@@ -25,7 +25,7 @@ class Yolo(nn.Module):
 			nn.Linear(7*7*1024, 4096),
 			nn.Dropout(0.5),
 			nn.LeakyReLU(0.1, inplace=True),
-			nn.Linear(4096, 7*7*30),
+			nn.Linear(4096, 7 * 7 *(2 * 5 + self.n_classes)),
 			nn.Sigmoid(),
 			nn.Unflatten(1, (7, 7, (2 * 5 + self.n_classes)))
 		)

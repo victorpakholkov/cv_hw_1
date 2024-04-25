@@ -1,7 +1,6 @@
 import torch
 
-
-def yolo_loss(yhat, y, lambda_coord=5, lambda_noobj=0.5):
+def yolo_loss(yhat, y, lambda_coord=5, lambda_noobj=0.5, n_classes=80):
 	"""
 	Args:
 		yhat: [#, 7, 7, 30]
@@ -37,8 +36,8 @@ def yolo_loss(yhat, y, lambda_coord=5, lambda_noobj=0.5):
 	y_area = y[..., :10].reshape(-1, 7, 7, 2, 5)
 	yhat_area = yhat[..., :10].reshape(-1, 7, 7, 2, 5)
 
-	y_class = y[..., 10:].reshape(-1, 7, 7, 20)
-	yhat_class = yhat[..., 10:].reshape(-1, 7, 7, 20)
+	y_class = y[..., 10:].reshape(-1, 7, 7, n_classes)
+	yhat_class = yhat[..., 10:].reshape(-1, 7, 7, n_classes)
 
 	with torch.no_grad():
 		# calculate IoU
@@ -65,7 +64,7 @@ def yolo_loss(yhat, y, lambda_coord=5, lambda_noobj=0.5):
 		# calculate indicator matrix
 		have_obj = y_res[..., 4] > 0
 		no_obj = ~have_obj
-
+		
 	return ((lambda_coord * ( # coordinate loss
 		  (y_res[..., 0] - yhat_res[..., 0]) ** 2 # X
 		+ (y_res[..., 1] - yhat_res[..., 1]) ** 2 # Y
