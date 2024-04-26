@@ -189,7 +189,15 @@ if __name__ == "__main__":
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
     val_loader = torch.utils.data.DataLoader(val_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
     test_loader = torch.utils.data.DataLoader(test_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
-	
-    net = Yolo()
+
+    resnet18 = torchvision.models.resnet18(pretrained=True)
+    # net = Yolo() # classical YoloV1 with our backbone
+    # resnet 18 backbone
+    # remove avg pool and fc
+    resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+    backbone = nn.Sequential(*list(resnet18.children())[:-2])
+    for param in backbone.parameters():
+	    param.requires_grad = False
+    net = Yolo(backbone, backbone_out_channels=512)
     train(net, train_iter=train_loader, test_iter=test_loader, num_epochs=2, lr=0.0001)
 
