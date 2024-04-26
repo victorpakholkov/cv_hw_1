@@ -11,6 +11,20 @@ class InterpolationMethod(Enum):
 	Interpolation_101 = 2
 
 
+class CalculationMetrics():
+	def __init__(self, IoU: float, confidence: float, mustbe_FP: bool, is_difficult: bool):
+		self.IoU = IoU
+		self.confidence = confidence
+		self.mustbe_FP = mustbe_FP
+		self.is_difficult = is_difficult
+
+
+def compare_metrics(metrics1: CalculationMetrics, metrics2: CalculationMetrics):
+	if metrics1.confidence == metrics2.confidence:
+		return metrics2.IoU - metrics1.IoU
+	return metrics2.confidence - metrics1.confidence
+
+
 class ObjectDetectionMetricsCalculator():
 
     def __init__(self, num_classes: int, confidence_thres: float):
