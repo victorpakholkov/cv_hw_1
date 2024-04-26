@@ -7,3 +7,4 @@ tqdm
 fiftyone
 opencv-python
 matplotlib
+json
