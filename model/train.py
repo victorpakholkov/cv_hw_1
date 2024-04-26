@@ -121,7 +121,7 @@ def train(net, train_iter, test_iter, num_epochs, lr, momentum=0.9, weight_decay
 			yhat = net(X)
 			
 			loss_val = yolo_loss(yhat, y)
-			print(loss_val)
+			# print(loss_val)
 
 			# backward to accumulate gradients
 			loss_val.sum().backward()
