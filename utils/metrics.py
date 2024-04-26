@@ -4,6 +4,7 @@ from enum import Enum
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
+from nms import nms
 
 
 class InterpolationMethod(Enum):

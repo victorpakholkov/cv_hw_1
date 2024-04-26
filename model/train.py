@@ -10,47 +10,49 @@ import time
 from tqdm import tqdm
 import numpy as np
 from yolo import Yolo
+import torchvision
+import torch.nn as nn
 
 class Accumulator(object):
-    """
-    Sum a list of numbers over time
-    from: https://github.com/dsgiitr/d2l-pytorch/blob/master/d2l/base.py
-    """
-    def __init__(self, n):
-        self.data = [0.0] * n
-    def add(self, *args):
-        self.data = [a + b for a, b in zip(self.data, args)]
-    def reset(self):
-        self.data = [0] * len(self.data)
-    def __getitem__(self, i):
-        return self.data[i]
+	"""
+	Sum a list of numbers over time
+	from: https://github.com/dsgiitr/d2l-pytorch/blob/master/d2l/base.py
+	"""
+	def __init__(self, n):
+		self.data = [0.0] * n
+	def add(self, *args):
+		self.data = [a + b for a, b in zip(self.data, args)]
+	def reset(self):
+		self.data = [0] * len(self.data)
+	def __getitem__(self, i):
+		return self.data[i]
 	
 class Timer(object):
-    """Record multiple running times."""
-    def __init__(self):
-        self.times = []
-        self.start()
+	"""Record multiple running times."""
+	def __init__(self):
+		self.times = []
+		self.start()
 
-    def start(self):
-        """Start the timer"""
-        self.start_time = time.time()
+	def start(self):
+		"""Start the timer"""
+		self.start_time = time.time()
 
-    def stop(self):
-        """Stop the timer and record the time in a list"""
-        self.times.append(time.time() - self.start_time)
-        return self.times[-1]
+	def stop(self):
+		"""Stop the timer and record the time in a list"""
+		self.times.append(time.time() - self.start_time)
+		return self.times[-1]
 
-    def avg(self):
-        """Return the average time"""
-        return sum(self.times)/len(self.times)
+	def avg(self):
+		"""Return the average time"""
+		return sum(self.times)/len(self.times)
 
-    def sum(self):
-        """Return the sum of time"""
-        return sum(self.times)
+	def sum(self):
+		"""Return the sum of time"""
+		return sum(self.times)
 
-    def cumsum(self):
-        """Return the accumuated times"""
-        return np.array(self.times).cumsum().tolist()
+	def cumsum(self):
+		"""Return the accumuated times"""
+		return np.array(self.times).cumsum().tolist()
 
 def train(net, train_iter, test_iter, num_epochs, lr, momentum=0.9, weight_decay=5e-4, accum_batch_num=1, save_path='./chkpt', load=None, load_epoch=-1, pretrained=False):
 	'''
@@ -150,20 +152,19 @@ def train(net, train_iter, test_iter, num_epochs, lr, momentum=0.9, weight_decay
 		net.eval()
 
 		with torch.no_grad():
-			timer.start()
+			
+			test_loop = tqdm(test_iter, leave=True)
+			for batch_idx, (X, y) in enumerate(test_loop):
+				timer.start()
 
-			for batch in test_iter:
-				X, y = batch
 				X, y = X.to(devices[0]), y.to(devices[0])
 				yhat = net(X)
 
 				loss_val = yolo_loss(yhat, y)
 				metrics.add(loss_val.sum().cpu(), X.shape[0])
-
-			timer.stop()
-
-			test_l = metrics[0] / metrics[1]
-			print_and_log("epoch: %d, test loss: %.4f, time: %.4f" % (epoch + 1, test_l.item(), timer.sum()), log_file)
+				test_l = metrics[0] / metrics[1]
+				timer.stop()
+				print_and_log("epoch: %d, batch: %d / %d, test loss: %.4f, time: %.4f" % (epoch, batch_idx + 1, num_batches, test_l.item(), timer.sum()), log_file)
 
 		# save model
 		torch.save(net.state_dict(), os.path.join(save_path, f'./{time.time_ns()}-epoch-{epoch}.pth'))
@@ -171,33 +172,33 @@ def train(net, train_iter, test_iter, num_epochs, lr, momentum=0.9, weight_decay
 
 if __name__ == "__main__":
 
-    # get coco dataset
-    dataset = load_coco(5000)
+	# get coco dataset
+	dataset = load_coco(5000)
 
-    classes = dataset.distinct(
-        "ground_truth.detections.label"
-        )
+	classes = dataset.distinct(
+		"ground_truth.detections.label"
+		)
 
-    train_data = dataset.match_tags("train")
-    test_data = dataset.match_tags("test")
-    val_data = dataset.match_tags("validation")
+	train_data = dataset.match_tags("train")
+	test_data = dataset.match_tags("test")
+	val_data = dataset.match_tags("validation")
 
-    train_dataset = FiftyOneTorchDataset(train_data, transforms=Transformtsz(resize=(448, 448)), classes=classes)
-    val_dataset_test = FiftyOneTorchDataset(val_data, transforms=Transformtsz(resize=(448, 448)), classes=classes)
-    test_dataset_test = FiftyOneTorchDataset(test_data, transforms=Transformtsz(resize=(448, 448)), classes=classes)
+	train_dataset = FiftyOneTorchDataset(train_data, transforms=Transformtsz(resize=(448, 448)), classes=classes)
+	val_dataset_test = FiftyOneTorchDataset(val_data, transforms=Transformtsz(resize=(448, 448)), classes=classes)
+	test_dataset_test = FiftyOneTorchDataset(test_data, transforms=Transformtsz(resize=(448, 448)), classes=classes)
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
-    val_loader = torch.utils.data.DataLoader(val_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
-    test_loader = torch.utils.data.DataLoader(test_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
+	train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
+	val_loader = torch.utils.data.DataLoader(val_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
+	test_loader = torch.utils.data.DataLoader(test_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
 
-    resnet18 = torchvision.models.resnet18(pretrained=True)
-    # net = Yolo() # classical YoloV1 with our backbone
-    # resnet 18 backbone
-    # remove avg pool and fc
-    resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
-    backbone = nn.Sequential(*list(resnet18.children())[:-2])
-    for param in backbone.parameters():
-	    param.requires_grad = False
-    net = Yolo(backbone, backbone_out_channels=512)
-    train(net, train_iter=train_loader, test_iter=test_loader, num_epochs=2, lr=0.0001)
+	resnet18 = torchvision.models.resnet18(pretrained=True)
+	# net = Yolo() # classical YoloV1 with our backbone
+	# resnet 18 backbone
+	# remove avg pool and fc
+	# resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+	backbone = nn.Sequential(*list(resnet18.children())[:-2])
+	for param in backbone.parameters():
+		param.requires_grad = False
+	net = Yolo(backbone, backbone_out_channels=512)
+	train(net, train_iter=train_loader, test_iter=test_loader, num_epochs=2, lr=0.0001)
 
