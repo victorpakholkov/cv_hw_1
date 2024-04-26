@@ -164,7 +164,8 @@ def train(net, train_iter, test_iter, num_epochs, lr, momentum=0.9, weight_decay
 				metrics.add(loss_val.sum().cpu(), X.shape[0])
 				test_l = metrics[0] / metrics[1]
 				timer.stop()
-				print_and_log("epoch: %d, batch: %d / %d, test loss: %.4f, time: %.4f" % (epoch, batch_idx + 1, num_batches, test_l.item(), timer.sum()), log_file)
+				if (batch_idx + 1) % (num_batches // 5) == 0 or batch_idx == num_batches - 1:
+					print_and_log("epoch: %d, batch: %d / %d, test loss: %.4f, time: %.4f" % (epoch, batch_idx + 1, num_batches, test_l.item(), timer.sum()), log_file)
 
 		# save model
 		torch.save(net.state_dict(), os.path.join(save_path, f'./{time.time_ns()}-epoch-{epoch}.pth'))
@@ -200,5 +201,5 @@ if __name__ == "__main__":
 	for param in backbone.parameters():
 		param.requires_grad = False
 	net = Yolo(backbone, backbone_out_channels=512)
-	train(net, train_iter=train_loader, test_iter=test_loader, num_epochs=2, lr=0.0001)
+	train(net, train_iter=train_loader, test_iter=val_loader, num_epochs=2, lr=0.0001)
 
