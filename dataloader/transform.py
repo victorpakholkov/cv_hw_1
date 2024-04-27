@@ -4,6 +4,7 @@ import fiftyone
 from PIL import Image
 import fiftyone.utils.coco as fouc
 from itertools import product
+import json
 
 class FiftyOneTorchDataset(torch.utils.data.Dataset):
     """A class to construct a PyTorch dataset from a FiftyOne dataset.
@@ -135,3 +136,66 @@ def collate(batch, grid_size=7, n_classes=80):
     images = torch.cat(images, 0)
     detections = torch.cat(gt, 0)
     return (images, detections)
+
+class RawDataforTest(torch.utils.data.Dataset):
+    
+    def __init__(self, fiftyone_dataset, transforms=None, gt_field="ground_truth", classes=None,):
+        
+        self.samples = fiftyone_dataset
+        self.transforms = transforms
+        self.gt_field = gt_field
+
+        self.img_paths = self.samples.values("filepath")
+
+        self.classes = classes
+        if not self.classes:
+            # Get list of distinct labels that exist in the view
+            self.classes = self.samples.distinct(
+                "%s.detections.label" % gt_field
+            )
+
+        if self.classes[0] != "background":
+            self.classes = ["background"] + self.classes
+
+        self.labels_map_rev = {c: i for i, c in enumerate(self.classes)}
+
+    def __len__(self):
+        return len(self.img_paths)
+
+    def __getitem__(self, idx):
+        
+        img_path = self.img_paths[idx]
+        sample = self.samples[img_path]
+        metadata = sample.metadata
+        img = Image.open(img_path).convert("RGB")
+        width, height = img.size
+
+        if sample[self.gt_field] is not None:
+            detections = sample[self.gt_field].detections
+            for det in detections:
+                category_id = self.labels_map_rev[det.label]
+                coco_obj = fouc.COCOObject.from_label(
+                    det, metadata, category_id=category_id,
+                )   
+                x, y, w, h = coco_obj.bbox
+                
+                # update labels from absolute to relative
+                h, w = float(h), float(w)
+
+                ret_targets = []
+                ret_targets.append({
+                        'xmin': float(x) / w,
+                        'ymin': float(y) / h,
+                        'xmax': float(x+w) / w,
+                        'ymax': float(x+h) / h,
+                        'category': category_id,
+                })
+                
+                
+            img = torchvision.transforms.functional.resize(img, (448, 448))
+            #img = torchvision.transforms.ToTensor(img)
+            img = torchvision.transforms.functional.to_tensor(img)
+            #if self.transforms is not None:
+                #img, target = self.transforms(img, target)
+        
+            return img, json.dumps(ret_targets)
