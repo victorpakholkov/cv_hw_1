@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from typing import Optional
 
 
 def draw_precision_recall(pr_data: list, class_idx: Optional[int]=None):
