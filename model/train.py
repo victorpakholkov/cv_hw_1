@@ -174,7 +174,7 @@ def train(net, train_iter, test_iter, num_epochs, lr, momentum=0.9, weight_decay
 if __name__ == "__main__":
 
 	# get coco dataset
-	dataset = load_coco(5000)
+	dataset = load_coco(15000)
 
 	classes = dataset.distinct(
 		"ground_truth.detections.label"
@@ -192,14 +192,14 @@ if __name__ == "__main__":
 	val_loader = torch.utils.data.DataLoader(val_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
 	test_loader = torch.utils.data.DataLoader(test_dataset_test, batch_size=8, shuffle=False, collate_fn=collate)#, sampler=train_sampler)
 
-	resnet18 = torchvision.models.resnet18(pretrained=True)
+	# resnet18 = torchvision.models.resnet18(pretrained=True)
 	# net = Yolo() # classical YoloV1 with our backbone
 	# resnet 18 backbone
 	# remove avg pool and fc
-	# resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+	resnet18 = torchvision.models.resnet18(weights='ResNet18_Weights.IMAGENET1K_V1')
 	backbone = nn.Sequential(*list(resnet18.children())[:-2])
 	for param in backbone.parameters():
 		param.requires_grad = False
 	net = Yolo(backbone, backbone_out_channels=512)
-	train(net, train_iter=train_loader, test_iter=val_loader, num_epochs=2, lr=0.0001)
+	train(net, train_iter=train_loader, test_iter=test_loader, num_epochs=20, lr=0.0001)
 
