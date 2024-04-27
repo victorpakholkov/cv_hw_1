@@ -14,11 +14,7 @@ results_dir = ''
 
 def test(net, batch_size):
   
-	lines = []
-	with open(test_index, 'r') as f:
-		for line in f.readlines():
-			line = line.strip()
-			lines.append(line)
+	lines = os.listdir(image_path)
 
 	with torch.no_grad():
 		idx = 0
@@ -34,7 +30,7 @@ def test(net, batch_size):
 			S = S.to('cuda')
 
 			for line in batch_lines:
-				image_name = line + '.jpg'
+				image_name = line
 				this_path = os.path.join(image_path, image_name)
 
 				with Image.open(this_path) as img:
@@ -48,7 +44,7 @@ def test(net, batch_size):
 
 			YHat = net(X)
 			for i, yhat in enumerate(YHat):
-        # nms
+        			# nms
 				yhat = nms(yhat)
 
 				yhat = yhat.reshape((-1, 30))
