@@ -8,3 +8,4 @@ fiftyone
 opencv-python
 matplotlib
 json
+IPython
