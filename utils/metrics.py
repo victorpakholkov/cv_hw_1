@@ -216,9 +216,12 @@ class ObjectDetectionMetricsCalculator():
 
 def test_and_draw_mAP(net, test_iter_raw, device):
         net.eval()
+        print("Changed to eval")
         net.to(device)
         calc = ObjectDetectionMetricsCalculator(80, 0.1)
         for i, (X, YRaw) in enumerate(test_iter_raw):
+            if i % 1000 = 0:
+                print(f'Calculating {i}...')
             #to_tensor = torchvision.transforms.ToTensor()
             #X = to_tensor(img).unsqueeze_(0).to(device)
             X = X.to(device)
@@ -226,6 +229,7 @@ def test_and_draw_mAP(net, test_iter_raw, device):
             for yhat, yraw in zip(YHat, YRaw):
                 yhat = nms(yhat)
                 calc.add_image_data(yhat.cpu(), yraw)
+        print("Finished calculating")
         print("mAP on validation:", calculate_mAP(0.5, InterpolationMethod.Interpolation_11))
-        for i in range(80):
-            draw_precision_recall(calc.calculate_precision_recall(0.5, i), i)
+        #for i in range(80):
+            #draw_precision_recall(calc.calculate_precision_recall(0.5, i), i)
